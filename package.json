@@ -6,7 +6,7 @@
   "os" : ["linux"],
   "scripts": {
     "test": "node test/test.js",
-    "install": "node-gyp rebuild"
+    "install": "make edlib EDLIB_REF=3dd5c2dcff078a35f45b2903210a85bfc9fec915 && node-gyp rebuild"
   },
   "repository": {
     "type": "git",

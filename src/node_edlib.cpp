@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdlib>
 
-#include "../lib/edlib.h"
+#include "../edlib/edlib.h"
 
 using namespace v8;
 
