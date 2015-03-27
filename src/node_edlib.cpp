@@ -45,8 +45,10 @@ void convertStringToSequence(std::string seq, unsigned char* seqC,
  *   }]
  * }
  */
-Handle<Value> align(const Arguments& args) {
-    HandleScope scope;
+void align(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = Isolate::GetCurrent();
+    HandleScope scope(isolate);
+
     int edlibMode = EDLIB_MODE_HW;
 
     // TODO: support more input parameters, and return alignment.
@@ -54,19 +56,19 @@ Handle<Value> align(const Arguments& args) {
 
     // ------------------------ TRANSFORM INPUT -------------------- //
     if (args.Length() < 2 || args.Length() > 3) {
-        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
-        return scope.Close(Undefined());
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        return;
     }
     if (!args[0]->IsString() || !args[1]->IsString()) {
-        ThrowException(Exception::TypeError(String::New("First and second argument must be strings")));
-        return scope.Close(Undefined());
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First and second argument must be strings")));
+        return;
     }
 
     std::string query(*String::Utf8Value(args[0]->ToString()));
     std::string target(*String::Utf8Value(args[1]->ToString()));
 
-    Local<Object> params = (args.Length() == 3) ? args[2]->ToObject() : Object::New();
-    Local<Value> mode = params->Get(String::NewSymbol("mode"));
+    Local<Object> params = (args.Length() == 3) ? args[2]->ToObject() : Object::New(isolate);
+    Local<Value> mode = params->Get(String::NewFromUtf8(isolate, "mode"));
     if (mode->IsString()) {
         std::string modeString(*String::Utf8Value(mode->ToString()));
         if (modeString == "HW") edlibMode = EDLIB_MODE_HW;
@@ -74,8 +76,8 @@ Handle<Value> align(const Arguments& args) {
         else if (modeString == "SHW") edlibMode = EDLIB_MODE_SHW;
         else if (modeString == "OV") edlibMode = EDLIB_MODE_OV;
         else {
-            ThrowException(Exception::TypeError(String::New("Invalid edlib mode")));
-            return scope.Close(Undefined());
+            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Invalid edlib mode")));
+            return;
         }
     }
 
@@ -103,21 +105,21 @@ Handle<Value> align(const Arguments& args) {
 
 
 
-    Local<Object> result = Object::New();
-    result->Set(String::NewSymbol("editDistance"), Integer::New(bestScore));
+    Local<Object> result = Object::New(isolate);
+    result->Set(String::NewFromUtf8(isolate, "editDistance"), Integer::New(isolate, bestScore));
     if (startLocations || endLocations) {
-        Local<Array> locations = Array::New(numLocations);
+        Local<Array> locations = Array::New(isolate, numLocations);
         for (int i = 0; i < numLocations; i++) {
-            Local<Object> location = Object::New();
+            Local<Object> location = Object::New(isolate);
             if (startLocations) {
-                location->Set(String::NewSymbol("start"), Integer::New(startLocations[i]));
+                location->Set(String::NewFromUtf8(isolate, "start"), Integer::New(isolate, startLocations[i]));
             }
             if (endLocations) {
-                location->Set(String::NewSymbol("end"), Integer::New(endLocations[i]));
+                location->Set(String::NewFromUtf8(isolate, "end"), Integer::New(isolate, endLocations[i]));
             }
             locations->Set(i, location);
         }
-        result->Set(String::NewSymbol("locations"), locations);
+        result->Set(String::NewFromUtf8(isolate, "locations"), locations);
     }
 
     delete[] queryC;
@@ -126,13 +128,12 @@ Handle<Value> align(const Arguments& args) {
     if (startLocations) free(startLocations);
     if (alignment) free(alignment);
 
-    return scope.Close(result);
+    args.GetReturnValue().Set(result);
 }
 
 
 void init(Handle<Object> exports) {
-    exports->Set(String::NewSymbol("align"),
-                 FunctionTemplate::New(align)->GetFunction());
+    NODE_SET_METHOD(exports, "align", align);
 }
 
 NODE_MODULE(node_edlib, init)
