@@ -1,37 +1,39 @@
 {
-    "name": "node-edlib",
-    "version": "0.0.1",
-    "description": "Wrapper for edlib sequence alignment library",
-    "main": "index.js",
-    "os" : ["linux"],
-    "engines": {
-        "node": ">=0.12"
-    },
-    "scripts": {
-        "test": "node test/test.js",
-        "prepublish": "make edlib EDLIB_REF=3dd5c2dcff078a35f45b2903210a85bfc9fec915"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Martinsos/node-edlib.git"
-    },
-    "keywords": [
-        "edlib",
-        "fast",
-        "text",
-        "search",
-        "sequence",
-        "alignment",
-        "edit distance",
-        "levenshtein"
-    ],
-    "author": "Martin Sosic <sosic.martin@gmail.com>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/Martinsos/node-edlib/issues"
-    },
-    "gypfile": true,
-    "dependencies": {
-        "bindings": "^1.2.1"
-    }
+  "name": "node-edlib",
+  "version": "0.0.2",
+  "description": "Wrapper for edlib sequence alignment library",
+  "main": "index.js",
+  "os": [
+    "linux"
+  ],
+  "engines": {
+    "node": ">=0.12"
+  },
+  "scripts": {
+    "test": "node test/test.js",
+    "prepublish": "make edlib EDLIB_REF=3dd5c2dcff078a35f45b2903210a85bfc9fec915"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Martinsos/node-edlib.git"
+  },
+  "keywords": [
+    "edlib",
+    "fast",
+    "text",
+    "search",
+    "sequence",
+    "alignment",
+    "edit distance",
+    "levenshtein"
+  ],
+  "author": "Martin Sosic <sosic.martin@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Martinsos/node-edlib/issues"
+  },
+  "gypfile": true,
+  "dependencies": {
+    "bindings": "^1.2.1"
+  }
 }
