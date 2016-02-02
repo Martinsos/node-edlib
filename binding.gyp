@@ -6,6 +6,7 @@
       "edlib/edlib.cpp"
     ],
     "cflags!": ["-O2"],
-    "cflags+": ["-O3"]
+    "cflags+": ["-O3"],
+    "include_dirs": ["<!(node -e \"require('nan')\")"]
   }]
 }

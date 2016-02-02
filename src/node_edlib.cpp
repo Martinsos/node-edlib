@@ -1,12 +1,9 @@
-#include <node.h>
-#include <v8.h>
+#include <nan.h>
 
 #include <string>
 #include <cstdlib>
 
 #include "../edlib/edlib.h"
-
-using namespace v8;
 
 /**
  * Converts string to sequence (array of unsigned chars).
@@ -45,10 +42,7 @@ void convertStringToSequence(std::string seq, unsigned char* seqC,
  *   }]
  * }
  */
-void align(const FunctionCallbackInfo<Value>& args) {
-    Isolate* isolate = Isolate::GetCurrent();
-    HandleScope scope(isolate);
-
+void align(const Nan::FunctionCallbackInfo<v8::Value>& args) {
     int edlibMode = EDLIB_MODE_HW;
 
     // TODO: support more input parameters, and return alignment.
@@ -56,27 +50,27 @@ void align(const FunctionCallbackInfo<Value>& args) {
 
     // ------------------------ TRANSFORM INPUT -------------------- //
     if (args.Length() < 2 || args.Length() > 3) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
+        Nan::ThrowTypeError("Wrong number of arguments");
         return;
     }
     if (!args[0]->IsString() || !args[1]->IsString()) {
-        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First and second argument must be strings")));
+        Nan::ThrowTypeError("First and second argument must be strings");
         return;
     }
 
-    std::string query(*String::Utf8Value(args[0]->ToString()));
-    std::string target(*String::Utf8Value(args[1]->ToString()));
+    std::string query(*Nan::Utf8String(args[0]->ToString()));
+    std::string target(*Nan::Utf8String(args[1]->ToString()));
 
-    Local<Object> params = (args.Length() == 3) ? args[2]->ToObject() : Object::New(isolate);
-    Local<Value> mode = params->Get(String::NewFromUtf8(isolate, "mode"));
+    v8::Local<v8::Object> params = (args.Length() == 3) ? args[2]->ToObject() : Nan::New<v8::Object>();
+    v8::Local<v8::Value> mode = params->Get(Nan::New("mode").ToLocalChecked());
     if (mode->IsString()) {
-        std::string modeString(*String::Utf8Value(mode->ToString()));
+        std::string modeString(*Nan::Utf8String(mode->ToString()));
         if (modeString == "HW") edlibMode = EDLIB_MODE_HW;
         else if (modeString == "NW") edlibMode = EDLIB_MODE_NW;
         else if (modeString == "SHW") edlibMode = EDLIB_MODE_SHW;
         else if (modeString == "OV") edlibMode = EDLIB_MODE_OV;
         else {
-            isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Invalid edlib mode")));
+            Nan::ThrowTypeError("Invalid edlib mode");
             return;
         }
     }
@@ -105,21 +99,21 @@ void align(const FunctionCallbackInfo<Value>& args) {
 
 
 
-    Local<Object> result = Object::New(isolate);
-    result->Set(String::NewFromUtf8(isolate, "editDistance"), Integer::New(isolate, bestScore));
+    v8::Local<v8::Object> result = Nan::New<v8::Object>();
+    result->Set(Nan::New("editDistance").ToLocalChecked(), Nan::New(bestScore));
     if (startLocations || endLocations) {
-        Local<Array> locations = Array::New(isolate, numLocations);
+        v8::Local<v8::Array> locations = Nan::New<v8::Array>(numLocations);
         for (int i = 0; i < numLocations; i++) {
-            Local<Object> location = Object::New(isolate);
+            v8::Local<v8::Object> location = Nan::New<v8::Object>();
             if (startLocations) {
-                location->Set(String::NewFromUtf8(isolate, "start"), Integer::New(isolate, startLocations[i]));
+                location->Set(Nan::New("start").ToLocalChecked(), Nan::New(startLocations[i]));
             }
             if (endLocations) {
-                location->Set(String::NewFromUtf8(isolate, "end"), Integer::New(isolate, endLocations[i]));
+                location->Set(Nan::New("end").ToLocalChecked(), Nan::New(endLocations[i]));
             }
             locations->Set(i, location);
         }
-        result->Set(String::NewFromUtf8(isolate, "locations"), locations);
+        result->Set(Nan::New("locations").ToLocalChecked(), locations);
     }
 
     delete[] queryC;
@@ -132,8 +126,9 @@ void align(const FunctionCallbackInfo<Value>& args) {
 }
 
 
-void init(Handle<Object> exports) {
-    NODE_SET_METHOD(exports, "align", align);
+void init(v8::Local<v8::Object> exports) {
+    exports->Set(Nan::New("align").ToLocalChecked(),
+                 Nan::New<v8::FunctionTemplate>(align)->GetFunction());
 }
 
 NODE_MODULE(node_edlib, init)
