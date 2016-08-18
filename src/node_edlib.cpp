@@ -32,7 +32,7 @@ void convertStringToSequence(std::string seq, unsigned char* seqC,
  * @param {string} query
  * @param {string} target
  * @param {object} params {
- *   mode: 'HW' || 'SHW' || 'NW' || 'OV'
+ *   mode: 'HW' || 'SHW' || 'NW'
  * }
  * @return {
  *   editDistance: integer,
@@ -43,7 +43,7 @@ void convertStringToSequence(std::string seq, unsigned char* seqC,
  * }
  */
 void align(const Nan::FunctionCallbackInfo<v8::Value>& args) {
-    int edlibMode = EDLIB_MODE_HW;
+    EdlibAlignMode edlibMode = EDLIB_MODE_HW;
 
     // TODO: support more input parameters, and return alignment.
     // TODO: understand difference between Handle and Local -> I may be doing something wrong.
@@ -68,60 +68,37 @@ void align(const Nan::FunctionCallbackInfo<v8::Value>& args) {
         if (modeString == "HW") edlibMode = EDLIB_MODE_HW;
         else if (modeString == "NW") edlibMode = EDLIB_MODE_NW;
         else if (modeString == "SHW") edlibMode = EDLIB_MODE_SHW;
-        else if (modeString == "OV") edlibMode = EDLIB_MODE_OV;
         else {
             Nan::ThrowTypeError("Invalid edlib mode");
             return;
         }
     }
-
-    // We construct alphabet from query and target sequence
-    unsigned char letterIdx[128]; //!< letterIdx[c] is index of letter c in alphabet
-    bool inAlphabet[128]; // inAlphabet[c] is true if c is in alphabet
-    for (int i = 0; i < 128; i++) inAlphabet[i] = false;
-    int alphabetLength = 0;
-
-    unsigned char* queryC = new unsigned char[query.length()];
-    convertStringToSequence(query, queryC, letterIdx, inAlphabet, alphabetLength);
-    unsigned char* targetC = new unsigned char[target.length()];
-    convertStringToSequence(target, targetC, letterIdx, inAlphabet, alphabetLength);
     // -------------------------------------------------------------- //
 
     // --------------------- FIND ALIGNMENT ------------------------- //
-    int bestScore, numLocations, alignmentLength;
-    int* endLocations, *startLocations;
-    unsigned char* alignment;
-    edlibCalcEditDistance(queryC, query.length(), targetC, target.length(),
-                          alphabetLength, -1, edlibMode, false, false,
-                          &bestScore, &endLocations, &startLocations, &numLocations,
-                          &alignment, &alignmentLength);
+    EdlibAlignResult edlibResult = edlibAlign(query.c_str(), query.length(), target.c_str(), target.length(),
+                                              edlibNewAlignConfig(-1, edlibMode, EDLIB_TASK_LOC));
     // -------------------------------------------------------------- //
 
 
-
     v8::Local<v8::Object> result = Nan::New<v8::Object>();
-    result->Set(Nan::New("editDistance").ToLocalChecked(), Nan::New(bestScore));
-    if (startLocations || endLocations) {
-        v8::Local<v8::Array> locations = Nan::New<v8::Array>(numLocations);
-        for (int i = 0; i < numLocations; i++) {
+    result->Set(Nan::New("editDistance").ToLocalChecked(), Nan::New(edlibResult.editDistance));
+    if (edlibResult.startLocations || edlibResult.endLocations) {
+        v8::Local<v8::Array> locations = Nan::New<v8::Array>(edlibResult.numLocations);
+        for (int i = 0; i < edlibResult.numLocations; i++) {
             v8::Local<v8::Object> location = Nan::New<v8::Object>();
-            if (startLocations) {
-                location->Set(Nan::New("start").ToLocalChecked(), Nan::New(startLocations[i]));
+            if (edlibResult.startLocations) {
+                location->Set(Nan::New("start").ToLocalChecked(), Nan::New(edlibResult.startLocations[i]));
             }
-            if (endLocations) {
-                location->Set(Nan::New("end").ToLocalChecked(), Nan::New(endLocations[i]));
+            if (edlibResult.endLocations) {
+                location->Set(Nan::New("end").ToLocalChecked(), Nan::New(edlibResult.endLocations[i]));
             }
             locations->Set(i, location);
         }
         result->Set(Nan::New("locations").ToLocalChecked(), locations);
     }
 
-    delete[] queryC;
-    delete[] targetC;
-    if (endLocations) free(endLocations);
-    if (startLocations) free(startLocations);
-    if (alignment) free(alignment);
-
+    edlibFreeAlignResult(edlibResult);
     args.GetReturnValue().Set(result);
 }
 
