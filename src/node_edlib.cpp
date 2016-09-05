@@ -6,28 +6,6 @@
 #include "../edlib/edlib.h"
 
 /**
- * Converts string to sequence (array of unsigned chars).
- * Expects seqC to point to array.
- * Saves mapping of letters to numbers in letterIdx, also updated inAlphabet and alphabetLength.
- * letterIdx, inAlphabet and alphabetLength are also used as inputs.
- */
-void convertStringToSequence(std::string seq, unsigned char* seqC,
-                             unsigned char letterIdx[], bool inAlphabet[], int &alphabetLength) {
-    for (unsigned int i = 0; i < seq.length(); i++) {
-        if (seq[i] < 0) {
-            //ThrowException(Exception::TypeError(String::New("Character is not in range")));
-            continue;
-        }
-        unsigned char c = (unsigned char)seq[i];
-        if (!inAlphabet[c]) {
-            inAlphabet[c] = true;
-            letterIdx[c] = alphabetLength++;
-        }
-        seqC[i] = letterIdx[c];
-    }
-}
-
-/**
  * Arguments expected: {string} query, {string} target,  mode
  * @param {string} query
  * @param {string} target
