@@ -1,6 +1,6 @@
 {
   "name": "node-edlib",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "Wrapper for edlib sequence alignment library",
   "main": "index.js",
   "os": [
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "node test/test.js",
-    "prepublish": "make edlib EDLIB_REF=v1.0.0"
+    "prepublish": "make edlib EDLIB_REF=v1.1.2"
   },
   "repository": {
     "type": "git",
